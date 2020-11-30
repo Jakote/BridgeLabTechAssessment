@@ -1,0 +1,137 @@
+openapi: 3.0.0
+info:
+  description: This is a  categories API
+  version: 1.0.0-oas3
+  title: categories API
+  contact:
+    email: apiteam@e-commerce.co.za
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: categories
+    description: categories
+paths:
+  /categories:
+    get:
+      tags:
+        - categories
+      summary: Get list of categories
+      operationId: getCategories
+      description: |
+        retrieve a list of categories
+      parameters:
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+      responses:
+        '200':
+          description: sOK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryList'
+        '400':
+          description: bad request
+    post:
+      tags:
+        - categories
+      summary: adds product item
+      operationId: addCategory
+      description: Adds an item to the system
+      requestBody:
+        $ref: '#/components/requestBodies/Category'
+      responses:
+        '201':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+    put:
+      tags:
+        - categories
+      summary: adds product item
+      operationId: updateCategory
+      description: Adds an item to the system
+      requestBody:
+        $ref: '#/components/requestBodies/Category'
+      responses:
+        '201':
+          description: item updated
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+  '/categories{id}':
+    delete:
+      tags:
+        - categories
+      summary: deletes a category item
+      operationId: deleteCategory
+      description: deletes an item from the system
+      parameters:
+        - name: id
+          description: Category item to add
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '204':
+          description: item deleted
+        '400':
+          description: Bad Request
+        '404':
+          description: Not found
+    get:
+      tags:
+        - categories
+      summary: get a category item
+      operationId: getCategory
+      description: get an item from the system
+      parameters:
+        - name: id
+          description: Category item to get
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+        '404':
+          description: Not found
+components:
+  requestBodies:
+    Category:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Category'
+      description: Category item to add
+  schemas:
+    Category:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: d290f1ee-6c54-4b01-90e6-d701748f0851
+        name:
+          type: string
+          example: Foods
+    CategoryList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Category'

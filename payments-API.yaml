@@ -1,0 +1,463 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Payment Ecosystem
+  description: Internal API that provides payment and wallet creation services
+servers:
+  - url: 'apiteam@e-commerce.co.za'
+paths:
+  /payments/{payment_id}:
+    parameters:
+      - $ref: '#/components/parameters/RequestId'
+      - in: path
+        name: payment_id
+        schema:
+          type: string
+        required: true
+        description: application payment id
+    get:
+      tags:
+        - Payments
+      description: get payment info
+      summary: get payment info
+      operationId: getPayment
+      responses:
+        '200':
+          description: Successfully returned payment info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '404':
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Generic Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /payments:
+    parameters:
+      - $ref: '#/components/parameters/RequestId'
+    post:
+      tags:
+        - Payments
+      description: create a payment
+      summary: create a payment
+      operationId: createPayment
+      requestBody:
+        description: payment description
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '202':
+          description: Successfully created a payment and now is processing
+        default:
+          description: Generic Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /wallets:
+    parameters:
+      - $ref: '#/components/parameters/RequestId'
+    post:
+      tags:
+        - Wallets
+      description: create wallet
+      summary: create wallet
+      operationId: createWallet
+      requestBody:
+        description: wallet_address and app_id
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletRequest'
+
+      responses:
+        '202':
+          description: Successfully created wallet
+        default:
+          description: Generic Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /wallets/{wallet_address}:
+    parameters:
+      - $ref: '#/components/parameters/RequestId'
+      - $ref: '#/components/parameters/WalletAddressParam'
+    get:
+      tags:
+        - Wallets
+      description: get wallet information
+      summary: get wallet information
+      operationId: getWalletInfo
+      responses:
+        '200':
+          description: Successfully returned wallet info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        default:
+          description: Generic Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /wallets/{wallet_address}/payments:
+    parameters:
+      - $ref: '#/components/parameters/RequestId'
+      - $ref: '#/components/parameters/WalletAddressParam'
+    get:
+      tags:
+        - Wallets
+      description: get wallet payments
+      summary: get wallet payments
+      operationId: getWalletPayments
+      responses:
+        '200':
+          description: Successfully returned wallet payments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Payment'
+        default:
+          description: Generic Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /services/{service_id}:
+    parameters:
+    - in: path
+      name: service_id
+      schema:
+        type: string
+      required: true
+      description: an identifer to group addresses watched and callback
+    put:
+      tags:
+        - Watchers
+      description: create a service with some addresses to always watch
+      summary: create a service with some addresses to always watch
+      operationId: createService
+      requestBody:
+        description: watcher addresses and callback
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Service'
+      responses:
+        '200':
+          description: Successfully created service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        default:
+          description: Generic Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Watchers
+      description: delete service
+      summary: delete service
+      operationId: deleteService
+    
+      responses:
+        '200':
+          description: Successfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        default:
+          description: Generic Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /config:
+    get:
+      tags:
+        - Configuration
+      responses:
+        '200':
+          description: Server Configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Config'
+                
+  '/services/{service_id}/watchers/{address}/payments/{payment_id}':
+    parameters:
+    - in: path
+      name: service_id
+      schema:
+        type: string
+      required: true
+      description: service id
+    - in: path
+      name: address
+      schema:
+        type: string
+      required: true
+      description: address to watch
+    - in: path
+      name: payment_id
+      schema:
+        type: string
+      required: true
+      description: payment to watch
+    put:
+      tags:
+        - Watchers
+      description: start watching a payment
+      summary: starts watching a specific payment on a specific address. Will stop watching after a timeout
+      operationId: addWatcher
+      responses:
+        '200':
+          description: Successfully created service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        default:
+          description: Generic Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Watchers
+      description: delete watcher
+      summary: delete watcher
+      operationId: deleteWatcher
+    
+      responses:
+        '200':
+          description: Successfully deleted
+        default:
+          description: Generic Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  parameters:
+    RequestId:
+      in: header
+      name: X-REQUEST-ID
+      required: true
+      schema:
+        type: string
+      description: >-
+        A unique id for the request. A retransmitted request will have the same
+        id
+    WalletAddressParam:
+      in: path
+      name: wallet_address
+      schema:
+        type: string
+      required: true
+      description: public address of wallet
+
+  schemas:
+
+    WalletBase:
+      type: object
+      required:
+        - wallet_address
+        - id
+      properties:
+        wallet_address:
+          type: string
+        id:
+          type: string
+          description: some identifier of the wallet to be transmitted back via callback
+
+    WalletRequest:
+      allOf:
+        - $ref: '#/components/schemas/WalletBase'
+        - type: object
+          required:
+            - app_id
+            - callback
+          properties:
+            app_id:
+              type: string
+              description: for book keeping
+            callback:
+              type: string
+              format: url
+              description: a url to post back the payment once complete
+
+    Wallet:
+      allOf:
+        - $ref: '#/components/schemas/WalletBase'
+        - type: object
+          required:
+            - kin_balance
+          properties:
+            kin_balance:
+              type: number
+            native_balance:
+              type: number
+
+    WalletCreationFailed:
+      type: object
+      properties:
+        id:
+          type: string
+        reason:
+          type: string
+
+    PaymentBase:
+      type: object
+      required:
+        - id
+        - amount
+        - app_id
+        - recipient_address
+      properties:
+        id:
+          type: string
+          description: |
+            a unique identifier for this value transfer.
+            The payment service should use this identifer to prevent duplicate payments.
+        amount:
+          type: integer
+          description: amount in KIN
+        app_id:
+          type: string
+        recipient_address:
+          type: string
+
+    PaymentRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaymentBase'
+        - type: object
+          required:
+            - callback
+          properties:
+            callback:
+              type: string
+              format: url
+              description: a url to post back the payment once complete
+
+    Payment:
+      allOf:
+        - $ref: '#/components/schemas/PaymentBase'
+        - type: object
+          required:
+            - transaction_id
+            - sender_address
+            - timestamp
+          properties:
+            transaction_id:
+              type: string
+              description: identifier of the transaction on the blockchain
+            sender_address:
+              type: string
+              description: identifier of the sender on the blockchain
+            timestamp:
+              type: string
+
+    PaymentFailed:
+      description: a failed payment transmitted to a callback
+      type: object
+      properties:
+        id:
+          type: string
+        reason:
+          type: string
+
+    Service:
+      type: object
+      required:
+        - wallet_addresses
+        - callback
+        - service_id
+      properties:
+        wallet_addresses:
+          type: array
+          items:
+            type: string
+        callback:
+          type: string
+          description: a webhook to call when a payment is complete
+        service_id:
+          type: string
+          description: the identifier of a service - usually there will only be a single server that wants to get updates on specific addresses. This can be used to shard callbacks onto multiple nodes for example.
+
+    Error:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          example: "Invalid Transaction"
+        message:
+          type: string
+          example: "no such transaction"
+        code:
+          type: integer
+          example: 4041
+
+    Config:
+      type: object
+      properties:
+        horizon_url:
+          type: string
+        network_passphrase:
+          type: string
+        asset_issuer:
+          type: string
+        asset_code:
+          type: string
+          example: KIN
+
+    CallbackPayload:
+      type: object
+      properties:
+        object:
+          type: string
+          enum: [payment, wallet]
+        action:
+          type: string
+          enum:
+            - send
+            - receive
+            - create # for wallet
+        state:
+          type: string
+          enum: [success, fail]
+        value:
+          type: object
+          enum: [Payment, Wallet, PaymentFailed, WalletCreationFailed]

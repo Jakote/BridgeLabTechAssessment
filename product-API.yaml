@@ -1,0 +1,222 @@
+openapi: 3.0.0
+info:
+  description: |
+    This is a  productstore server.  
+  version: 1.0.0-oas3
+  title: Products API
+  termsOfService: 'http://swagger.io/terms/'
+  contact:
+    email: apiteam@e-commerce.co.za
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: product
+    description: Everything about your products
+paths:
+  /products:
+    post:
+      tags:
+        - product
+      summary: Add a new product to the store
+      operationId: addproduct
+      requestBody:
+        $ref: '#/components/requestBodies/Product'
+      responses:
+        '405':
+          description: Invalid input
+    put:
+      tags:
+        - product
+      summary: Update an existing product
+      operationId: updateproduct
+      requestBody:
+        $ref: '#/components/requestBodies/Product'
+      responses:
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: product not found
+        '405':
+          description: Validation exception
+    get:
+      tags:
+        - product
+      summary: Get list of products
+      operationId: getproductList
+      description: |
+        retrieve a list of products
+      parameters:
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+      responses:
+        '200':
+          description: sOK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductList'
+        '400':
+          description: bad request
+  '/products/{id}':
+    get:
+      tags:
+        - product
+      summary: Find product by ID
+      description: Returns a single product
+      operationId: getproductById
+      parameters:
+        - name: id
+          in: path
+          description: ID of product to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: product not found
+    post:
+      tags:
+        - product
+      summary: Updates a product in the store with form data
+      operationId: updateproductWithForm
+      parameters:
+        - name: id
+          in: path
+          description: ID of product that needs to be updated
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  description: Updated name of the product
+                  type: string
+                status:
+                  description: Updated status of the product
+                  type: string
+      responses:
+        '405':
+          description: Invalid input
+    delete:
+      tags:
+        - product
+      summary: Deletes a product
+      operationId: deleteproduct
+      parameters:
+        - name: api_key
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: product id to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: product not found
+  '/product/{id}/uploadImage':
+    post:
+      tags:
+        - product
+      summary: uploads an image
+      operationId: uploadFile
+      parameters:
+        - name: id
+          in: path
+          description: ID of product to update
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                additionalMetadata:
+                  description: Additional data to pass to server
+                  type: string
+                file:
+                  description: file to upload
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+servers:
+  - url: 'https://virtserver.swaggerhub.com/ramaboli/products/1.0.0'
+  - url: 'http://virtserver.swaggerhub.com/ramaboli/products/1.0.0'
+components:
+  requestBodies:
+    Product:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Product'
+      description: product object that needs to be added
+      required: true
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: product id
+        name:
+          type: string
+          description: product name
+        description:
+          type: string
+          description: product description
+        quantity:
+          type: integer
+          description: number of products
+        category:
+          type: object
+          description: product category
+          properties:
+            id:
+              type: integer
+              description: category id
+            name:
+              type: string
+              description: category name
+    ApiResponse:
+      type: string
+      example: Operation Successful
+    ProductList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Product'
